@@ -1,165 +1,225 @@
-<style>
-    /* Body and Background Gradient */
-    body {
-        font-family: 'Arial', sans-serif;
-        margin: 0;
-        padding: 0;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: flex-start;
-        min-height: 100vh;
-        background: linear-gradient(135deg, #6a11cb, #2575fc);
-        color: #fff;
-    }
+<!DOCTYPE html>
+<html lang='en'>
+    <head>
+        <meta charset='UTF-8'>
+        <meta name='viewport' content='width=device-width, initial-scale=1.0'>
+        <title>Plan Timer</title>
+        <style>
+            /* Body and Gradient Background */
+            body {
+                font-family: 'Arial', sans-serif;
+                margin: 0;
+                padding: 0;
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                justify-content: flex-start;
+                min-height: 100vh;
+                background: linear-gradient(135deg, #6a11cb, #2575fc);
+                color: #fff;
+            }
 
-    /* Timer Card */
-    #task-timer {
-        background: rgba(255, 255, 255, 0.1);
-        backdrop-filter: blur(10px);
-        border-radius: 15px;
-        padding: 30px 40px;
-        margin-top: 50px;
-        text-align: center;
-        box-shadow: 0 8px 20px rgba(0,0,0,0.2);
-        max-width: 400px;
-        width: 90%;
-    }
+            /* Timer Card */
+            #task-timer {
+                background: rgba(255, 255, 255, 0.1);
+                backdrop-filter: blur(10px);
+                border-radius: 15px;
+                padding: 30px 40px;
+                margin-top: 50px;
+                text-align: center;
+                box-shadow: 0 8px 20px rgba(0,0,0,0.2);
+                max-width: 400px;
+                width: 90%;
+            }
 
-    /* Current Task */
-    #current-task {
-        font-size: 1.8rem;
-        margin-bottom: 15px;
-    }
+            /* Current Task */
+            #current-task {
+                font-size: 1.8rem;
+                margin-bottom: 15px;
+            }
 
-    /* Timer Display */
-    #timer {
-        font-size: 2.5rem;
-        font-weight: bold;
-        margin-bottom: 25px;
-    }
+            /* Timer Display */
+            #timer {
+                font-size: 2.5rem;
+                font-weight: bold;
+                margin-bottom: 25px;
+            }
 
-    /* Buttons */
-    button {
-        padding: 10px 25px;
-        font-size: 16px;
-        font-weight: bold;
-        border: none;
-        border-radius: 50px;
-        margin: 0 10px;
-        cursor: pointer;
-        transition: all 0.3s ease;
-        background: linear-gradient(135deg, #ff416c, #ff4b2b);
-        color: #fff;
-        box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-    }
+            /* Buttons */
+            button {
+                padding: 10px 25px;
+                font-size: 16px;
+                font-weight: bold;
+                border: none;
+                border-radius: 50px;
+                margin: 0 10px;
+                cursor: pointer;
+                transition: all 0.3s ease;
+                background: linear-gradient(135deg, #ff416c, #ff4b2b);
+                color: #fff;
+                box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+            }
 
-    button:hover {
-        transform: translateY(-3px);
-        box-shadow: 0 6px 18px rgba(0,0,0,0.4);
-    }
+            button:hover {
+                transform: translateY(-3px);
+                box-shadow: 0 6px 18px rgba(0,0,0,0.4);
+            }
 
-    /* Links */
-    a {
-        color: #fff;
-        text-decoration: underline;
-        margin-top: 30px;
-        display: inline-block;
-    }
+            /* Links */
+            a {
+                color: #fff;
+                text-decoration: underline;
+                margin-top: 30px;
+                display: inline-block;
+            }
 
-    /* Responsive */
-    @media(max-width: 500px){
-        #task-timer {
-            padding: 20px;
-        }
-        #timer {
-            font-size: 2rem;
-        }
-        button {
-            padding: 8px 20px;
-            font-size: 14px;
-        }
-    }
+            /* Music Player Container */
+            #music-container {
+                text-align: center;
+                margin-top: 30px;
+            }
 
-</style>
-<br><br>
-<h2>Plan: {{ plan_name }}</h2>
+            #music-container button {
+                margin-bottom: 15px;
+            }
 
-{% if tasks %}
-<div id='task-timer'>
-    <h3 id='current-task'>Ready?</h3>
-    <p id='timer'>00:00</p>
-    <button id='start-btn'>Start</button>
-    <button id='pause-btn' style='display:none'>Pause</button>
-    <button id='next-btn' style='display:none'>Skip</button>
-</div>
-{% else %}
-<p>No tasks were submitted.</p>
-{% endif %}
+            #music-player {
+                display: none;
+                border-radius: 15px;
+                overflow: hidden;
+                box-shadow: 0 8px 20px rgba(0,0,0,0.2);
+            }
 
-<a href='/'>Back to form</a>
+            #music-player iframe {
+                border-radius: 15px;
+            }
 
-<script>
-    const tasks = {{ tasks|tojson }};
-    const taskNames = Object.keys(tasks);
-    let currentIndex = 0;
-    let remainingTime = 0;
-    let timerInterval = null;
-    let paused = false;
-
-    const taskEl = document.getElementById('current-task');
-    const timerEl = document.getElementById('timer');
-    const startBtn = document.getElementById('start-btn');
-    const pauseBtn = document.getElementById('pause-btn');
-    const nextBtn = document.getElementById('next-btn');
-
-    function startTask(index) {
-        if (index >= taskNames.length) {
-            taskEl.textContent = 'All tasks completed!';
-            timerEl.textContent = '';
-            pauseBtn.style.display = 'none';
-            nextBtn.style.display = 'none';
-            return;
-        }
-        const taskName = taskNames[index];
-        remainingTime = tasks[taskName] * 60; // minutes → seconds
-        taskEl.textContent = taskName;
-        updateTimer();
-        timerInterval = setInterval(() => {
-            if (!paused) {
-                remainingTime--;
-                updateTimer();
-                if (remainingTime <= 0) {
-                    clearInterval(timerInterval);
-                    currentIndex++;
-                    startTask(currentIndex);
+            /* Responsive */
+            @media(max-width: 500px){
+                #task-timer {
+                    padding: 20px;
+                }
+                #timer {
+                    font-size: 2rem;
+                }
+                button {
+                    padding: 8px 20px;
+                    font-size: 14px;
+                }
+                #music-player iframe {
+                    width: 100%;
+                    height: 300px;
                 }
             }
-        }, 1000);
-    }
+        </style>
+    </head>
+    <body>
 
-    function updateTimer() {
-        const minutes = Math.floor(remainingTime / 60);
-        const seconds = remainingTime % 60;
-        timerEl.textContent = `${minutes.toString().padStart(2,'0')}:${seconds.toString().padStart(2,'0')}`;
-    }
+        <h2>Plan: {{ plan_name }}</h2>
 
-    // Start button event
-    startBtn.addEventListener('click', () => {
-        startBtn.style.display = 'none';
-        pauseBtn.style.display = 'inline-block';
-        nextBtn.style.display = 'inline-block';
-        startTask(currentIndex);
-    });
+        {% if tasks %}
+        <div id='task-timer'>
+            <h3 id='current-task'>Ready?</h3>
+            <p id='timer'>00:00</p>
+            <button id='start-btn'>Start</button>
+            <button id='pause-btn' style='display:none'>Pause</button>
+            <button id='next-btn' style='display:none'>Skip</button>
+        </div>
 
-    pauseBtn.addEventListener('click', () => {
-        paused = !paused;
-        pauseBtn.textContent = paused ? 'Resume' : 'Pause';
-    });
+        <!-- Music Player -->
+        <div id="music-container">
+            <button id="music-toggle">Show Music Player</button>
+            <div id="music-player">
+                <iframe id="music-iframe" src="https://open.spotify.com/embed/playlist/37i9dQZF1DX8NTLI2TtZa6" 
+                    width="300" height="380" frameborder="0" allowtransparency="true" allow="encrypted-media">
+                </iframe>
+            </div>
+        </div>
 
-    nextBtn.addEventListener('click', () => {
-        clearInterval(timerInterval);
-        currentIndex++;
-        startTask(currentIndex);
-    });
-</script>
+        {% else %}
+        <p>No tasks were submitted.</p>
+        {% endif %}
+
+        <a href='/'>Back to form</a>
+
+        <script>
+            // Task Timer Logic
+            const tasks = {{ tasks|tojson }};
+            const taskNames = Object.keys(tasks);
+            let currentIndex = 0;
+            let remainingTime = 0;
+            let timerInterval = null;
+            let paused = false;
+
+            const taskEl = document.getElementById('current-task');
+            const timerEl = document.getElementById('timer');
+            const startBtn = document.getElementById('start-btn');
+            const pauseBtn = document.getElementById('pause-btn');
+            const nextBtn = document.getElementById('next-btn');
+
+            function startTask(index) {
+                if (index >= taskNames.length) {
+                    taskEl.textContent = 'All tasks completed!';
+                    timerEl.textContent = '';
+                    pauseBtn.style.display = 'none';
+                    nextBtn.style.display = 'none';
+                    return;
+                }
+                const taskName = taskNames[index];
+                remainingTime = tasks[taskName] * 60; // minutes → seconds
+                taskEl.textContent = taskName;
+                updateTimer();
+                timerInterval = setInterval(() => {
+                    if (!paused) {
+                        remainingTime--;
+                        updateTimer();
+                        if (remainingTime <= 0) {
+                            clearInterval(timerInterval);
+                            currentIndex++;
+                            startTask(currentIndex);
+                        }
+                    }
+                }, 1000);
+            }
+
+            function updateTimer() {
+                const minutes = Math.floor(remainingTime / 60);
+                const seconds = remainingTime % 60;
+                timerEl.textContent = `${minutes.toString().padStart(2,'0')}:${seconds.toString().padStart(2,'0')}`;
+            }
+
+            startBtn.addEventListener('click', () => {
+                startBtn.style.display = 'none';
+                pauseBtn.style.display = 'inline-block';
+                nextBtn.style.display = 'inline-block';
+                startTask(currentIndex);
+            });
+
+            pauseBtn.addEventListener('click', () => {
+                paused = !paused;
+                pauseBtn.textContent = paused ? 'Resume' : 'Pause';
+            });
+
+            nextBtn.addEventListener('click', () => {
+                clearInterval(timerInterval);
+                currentIndex++;
+                startTask(currentIndex);
+            });
+
+            // Music Player Toggle
+            const musicToggle = document.getElementById('music-toggle');
+            const musicPlayer = document.getElementById('music-player');
+
+            musicToggle.addEventListener('click', () => {
+                if (musicPlayer.style.display === 'none') {
+                    musicPlayer.style.display = 'block';
+                    musicToggle.textContent = 'Hide Music Player';
+                } else {
+                    musicPlayer.style.display = 'none';
+                    musicToggle.textContent = 'Show Music Player';
+                }
+            });
+        </script>
+
+    </body>
+</html>
