@@ -74,8 +74,23 @@
         <br>
         <h3>Study Plans:</h3>
         <div id="studyplans">
-            <button onclick="createPlan()">Create a New Study Plan</button>
+            <button id="show-form-btn">Create a New Study Plan</button>
+
+            <form action="/submit" method="POST" id="plan-form" style="display:none; margin-top:20px;">
+                <input type="text" name="plan_name" placeholder="Plan Name" required>
+                <br>
+                <div id="tasks-container">
+                    <!-- Task rows will be added here dynamically -->
+                </div>
+
+                <button type="button" id="add-task-btn">+ Add Task</button>
+                <br>
+                <br>
+                <button type="submit">Submit Plan</button>
+            </form>
         </div>
+
+
         <h3>Chat with an AI assistant:</h3>
         <div id="chatbot">
             <p></p>
