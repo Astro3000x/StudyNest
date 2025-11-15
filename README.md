@@ -1,2 +1,0 @@
-### Spots
-AIzaSyCpiZPIpkmC5Go2BE27mWXn7GafL7Pwp3w
