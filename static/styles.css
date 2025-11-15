@@ -1,13 +1,35 @@
 body {
-    font-family: Arial, sans-serif;
-    background: #f2f2f2;
+    font-family: "Courier New", monospace;
     padding: 40px;
     text-align: center;
+    background: linear-gradient(45deg, #800080, #0000ff);
+    background-size: 400% 400%;
+    animation: gradientAnimation 10s ease infinite alternate;
 }
 
+@keyframes gradientAnimation {
+    0% {
+       background-position: 0% 50%;
+    }
+    50% {
+       background-position: 100% 50%;
+    }
+    100% {
+       background-position: 0% 50%;
+    }
+}
 
 button {
+    background-color: magenta;
     padding: 10px 20px;
     font-size: 16px;
     cursor: pointer;
+    border: none;
+    border-radius: 5px;
+}
+button:hover {
+    background-color: purple;
+}
+footer {
+    margin-top: 50px;
 }

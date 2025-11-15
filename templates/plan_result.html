@@ -1,0 +1,165 @@
+<style>
+    /* Body and Background Gradient */
+    body {
+        font-family: 'Arial', sans-serif;
+        margin: 0;
+        padding: 0;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: flex-start;
+        min-height: 100vh;
+        background: linear-gradient(135deg, #6a11cb, #2575fc);
+        color: #fff;
+    }
+
+    /* Timer Card */
+    #task-timer {
+        background: rgba(255, 255, 255, 0.1);
+        backdrop-filter: blur(10px);
+        border-radius: 15px;
+        padding: 30px 40px;
+        margin-top: 50px;
+        text-align: center;
+        box-shadow: 0 8px 20px rgba(0,0,0,0.2);
+        max-width: 400px;
+        width: 90%;
+    }
+
+    /* Current Task */
+    #current-task {
+        font-size: 1.8rem;
+        margin-bottom: 15px;
+    }
+
+    /* Timer Display */
+    #timer {
+        font-size: 2.5rem;
+        font-weight: bold;
+        margin-bottom: 25px;
+    }
+
+    /* Buttons */
+    button {
+        padding: 10px 25px;
+        font-size: 16px;
+        font-weight: bold;
+        border: none;
+        border-radius: 50px;
+        margin: 0 10px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        background: linear-gradient(135deg, #ff416c, #ff4b2b);
+        color: #fff;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+    }
+
+    button:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 6px 18px rgba(0,0,0,0.4);
+    }
+
+    /* Links */
+    a {
+        color: #fff;
+        text-decoration: underline;
+        margin-top: 30px;
+        display: inline-block;
+    }
+
+    /* Responsive */
+    @media(max-width: 500px){
+        #task-timer {
+            padding: 20px;
+        }
+        #timer {
+            font-size: 2rem;
+        }
+        button {
+            padding: 8px 20px;
+            font-size: 14px;
+        }
+    }
+
+</style>
+<br><br>
+<h2>Plan: {{ plan_name }}</h2>
+
+{% if tasks %}
+<div id='task-timer'>
+    <h3 id='current-task'>Ready?</h3>
+    <p id='timer'>00:00</p>
+    <button id='start-btn'>Start</button>
+    <button id='pause-btn' style='display:none'>Pause</button>
+    <button id='next-btn' style='display:none'>Skip</button>
+</div>
+{% else %}
+<p>No tasks were submitted.</p>
+{% endif %}
+
+<a href='/'>Back to form</a>
+
+<script>
+    const tasks = {{ tasks|tojson }};
+    const taskNames = Object.keys(tasks);
+    let currentIndex = 0;
+    let remainingTime = 0;
+    let timerInterval = null;
+    let paused = false;
+
+    const taskEl = document.getElementById('current-task');
+    const timerEl = document.getElementById('timer');
+    const startBtn = document.getElementById('start-btn');
+    const pauseBtn = document.getElementById('pause-btn');
+    const nextBtn = document.getElementById('next-btn');
+
+    function startTask(index) {
+        if (index >= taskNames.length) {
+            taskEl.textContent = 'All tasks completed!';
+            timerEl.textContent = '';
+            pauseBtn.style.display = 'none';
+            nextBtn.style.display = 'none';
+            return;
+        }
+        const taskName = taskNames[index];
+        remainingTime = tasks[taskName] * 60; // minutes → seconds
+        taskEl.textContent = taskName;
+        updateTimer();
+        timerInterval = setInterval(() => {
+            if (!paused) {
+                remainingTime--;
+                updateTimer();
+                if (remainingTime <= 0) {
+                    clearInterval(timerInterval);
+                    currentIndex++;
+                    startTask(currentIndex);
+                }
+            }
+        }, 1000);
+    }
+
+    function updateTimer() {
+        const minutes = Math.floor(remainingTime / 60);
+        const seconds = remainingTime % 60;
+        timerEl.textContent = `${minutes.toString().padStart(2,'0')}:${seconds.toString().padStart(2,'0')}`;
+    }
+
+    // Start button event
+    startBtn.addEventListener('click', () => {
+        startBtn.style.display = 'none';
+        pauseBtn.style.display = 'inline-block';
+        nextBtn.style.display = 'inline-block';
+        startTask(currentIndex);
+    });
+
+    pauseBtn.addEventListener('click', () => {
+        paused = !paused;
+        pauseBtn.textContent = paused ? 'Resume' : 'Pause';
+    });
+
+    nextBtn.addEventListener('click', () => {
+        clearInterval(timerInterval);
+        currentIndex++;
+        startTask(currentIndex);
+    });
+</script>
