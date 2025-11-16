@@ -139,10 +139,21 @@
         <div id="music-container">
             <button id="music-toggle">Show Music Player</button>
             <div id="music-player">
-                <iframe id="music-iframe" src="https://open.spotify.com/embed/playlist/37i9dQZF1DX8NTLI2TtZa6" 
+                <iframe id="music-iframe" 
+                    src="https://open.spotify.com/embed/playlist/37i9dQZF1DX8NTLI2TtZa6"
                     width="300" height="380" frameborder="0" allowtransparency="true" allow="encrypted-media">
                 </iframe>
+
+                <div id="playlist-form" style="margin-top: 10px;">
+                    <input 
+                        type="text" 
+                        id="playlist-input" 
+                        placeholder="Paste Spotify playlist link..."
+                        style="width: 250px; padding: 6px;">
+                    <button id="playlist-btn">Update Playlist</button>
+                </div>
             </div>
+
         </div>
 
         {% else %}
@@ -328,6 +339,50 @@
                 const audio = new Audio("/sounds/alert.mp3"); // change path
                 audio.play().catch(() => {});
             }
+            // Playlist changer
+            const playlistInput = document.getElementById("playlist-input");
+            const playlistBtn = document.getElementById("playlist-btn");
+            const musicIframe = document.getElementById("music-iframe");
+
+            // Load saved playlist, if any
+            const savedPlaylist = localStorage.getItem("customPlaylist");
+            if (savedPlaylist) {
+                musicIframe.src = savedPlaylist;
+            }
+
+            playlistBtn.addEventListener("click", () => {
+                const url = playlistInput.value.trim();
+                if (!url) return;
+
+                // Expected formats:
+                // https://open.spotify.com/playlist/XXXX
+                // https://open.spotify.com/playlist/XXXX?si=123
+                // spotify:playlist:XXXX (optional support)
+
+                let playlistId = "";
+
+                if (url.includes("open.spotify.com")) {
+                    // Extract ID from URL path
+                    playlistId = url.split("playlist/")[1]?.split("?")[0];
+                } else if (url.includes("spotify:playlist:")) {
+                    playlistId = url.split("spotify:playlist:")[1];
+                }
+
+                if (!playlistId) {
+                    alert("Invalid playlist link.");
+                    return;
+                }
+
+                const embedUrl = `https://open.spotify.com/embed/playlist/${playlistId}`;
+
+                // Set iframe
+                musicIframe.src = embedUrl;
+
+                // Save for future page loads
+                localStorage.setItem("customPlaylist", embedUrl);
+
+                playlistInput.value = "";
+            });
 
         </script>
 
