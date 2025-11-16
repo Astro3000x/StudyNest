@@ -124,7 +124,16 @@
             <button id='start-btn'>Start</button>
             <button id='pause-btn' style='display:none'>Pause</button>
             <button id='next-btn' style='display:none'>Skip</button>
+            <div id="timer-container">
+                <div id="progress-container" style="width: 100%; background: #ddd; border-radius: 8px; margin-top: 10px;">
+                    <div id="progress-bar" style="height: 20px; width: 0%; background: linear-gradient(90deg, #6a11cb 0%, #2575fc 100%); border-radius: 8px;"></div>
+                </div>
+            </div>
         </div>
+        <label style="display:none; align-items:center; gap:6px; margin-top:8px;">
+            <input type="checkbox" id="focusModeToggle">
+            Enable Focus Mode (notify me if I leave)
+        </label>
 
         <!-- Music Player -->
         <div id="music-container">
@@ -140,54 +149,98 @@
         <p>No tasks were submitted.</p>
         {% endif %}
 
-        <a href='/'>Back to form</a>
+        <a href='/dashboard'>Back to form</a>
 
         <script>
             // Task Timer Logic
             const tasks = {{ tasks|tojson }};
             const taskNames = Object.keys(tasks);
+
             let currentIndex = 0;
             let remainingTime = 0;
+            let totalTime = 0; // total time for current task/break
             let timerInterval = null;
             let paused = false;
+            let onBreak = false; // added missing variable
+
+            const breakActivities = [
+                'Stretch for 2–3 minutes',
+                'Take a short walk',
+                'Do 10 jumping jacks',
+                'Drink a glass of water',
+                'Doodle or sketch',
+                'Do a 2-minute mindfulness exercise',
+                'Listen to a short song',
+                'Review one flashcard',
+                'Tidy your desk',
+                'Write a quick gratitude note'
+            ];
 
             const taskEl = document.getElementById('current-task');
             const timerEl = document.getElementById('timer');
             const startBtn = document.getElementById('start-btn');
             const pauseBtn = document.getElementById('pause-btn');
             const nextBtn = document.getElementById('next-btn');
+            const progressBar = document.getElementById('progress-bar');
 
+            // update timer and progress bar
+            function updateTimer() {
+                const minutes = Math.floor(remainingTime / 60);
+                const seconds = remainingTime % 60;
+                timerEl.textContent = `${minutes.toString().padStart(2,'0')}:${seconds.toString().padStart(2,'0')}`;
+
+                if (totalTime > 0) {
+                    const progressPercent = ((totalTime - remainingTime) / totalTime) * 100;
+                    progressBar.style.width = progressPercent + '%';
+                }
+            }
+
+            // start task or break
             function startTask(index) {
                 if (index >= taskNames.length) {
                     taskEl.textContent = 'All tasks completed!';
                     timerEl.textContent = '';
+                    progressBar.style.width = '100%';
                     pauseBtn.style.display = 'none';
                     nextBtn.style.display = 'none';
                     return;
                 }
-                const taskName = taskNames[index];
-                remainingTime = tasks[taskName] * 60; // minutes → seconds
-                taskEl.textContent = taskName;
+
+                clearInterval(timerInterval); // clear any previous timer
+
+                if (!onBreak) {
+                    // start task
+                    const taskName = taskNames[index];
+                    totalTime = tasks[taskName] * 60;
+                    remainingTime = totalTime;
+                    taskEl.textContent = taskName;
+                    onBreak = true; // next step is break
+                } else {
+                    // start break
+                    const activity = breakActivities[Math.floor(Math.random() * breakActivities.length)];
+                    totalTime = 3 * 60; // 3-minute break
+                    remainingTime = totalTime;
+                    taskEl.textContent = `Break: ${activity}`;
+                    onBreak = false; // next step is next task
+                    currentIndex++; // move to next task after break
+                }
+
                 updateTimer();
+
                 timerInterval = setInterval(() => {
                     if (!paused) {
                         remainingTime--;
                         updateTimer();
+
                         if (remainingTime <= 0) {
                             clearInterval(timerInterval);
-                            currentIndex++;
                             startTask(currentIndex);
                         }
                     }
                 }, 1000);
             }
 
-            function updateTimer() {
-                const minutes = Math.floor(remainingTime / 60);
-                const seconds = remainingTime % 60;
-                timerEl.textContent = `${minutes.toString().padStart(2,'0')}:${seconds.toString().padStart(2,'0')}`;
-            }
-
+            // Buttons
             startBtn.addEventListener('click', () => {
                 startBtn.style.display = 'none';
                 pauseBtn.style.display = 'inline-block';
@@ -202,7 +255,6 @@
 
             nextBtn.addEventListener('click', () => {
                 clearInterval(timerInterval);
-                currentIndex++;
                 startTask(currentIndex);
             });
 
@@ -219,6 +271,64 @@
                     musicToggle.textContent = 'Show Music Player';
                 }
             });
+            let focusModeEnabled = false;
+            let tabHiddenTime = null;
+            let focusTimeout = 15000; // 15 seconds — change to whatever you want
+
+            document.getElementById("focusModeToggle").addEventListener("change", (e) => {
+                focusModeEnabled = e.target.checked;
+            });
+
+            // When timer starts:
+            function startTimer() {
+                // your existing code...
+                if (focusModeEnabled) {
+                    tabHiddenTime = null;
+                }
+            }
+
+            // Tab visibility monitor
+            document.addEventListener("visibilitychange", () => {
+                if (!focusModeEnabled) return;
+
+                // User leaves the tab
+                if (document.hidden) {
+                    tabHiddenTime = Date.now();
+                } 
+                // User returns to the tab
+                else {
+                    tabHiddenTime = null;
+                }
+            });
+
+            // Periodically check if they’ve been away too long
+            setInterval(() => {
+                if (!focusModeEnabled || !tabHiddenTime) return;
+
+                const elapsed = Date.now() - tabHiddenTime;
+
+                if (elapsed >= focusTimeout) {
+                    notifyReturnToWork();
+                    tabHiddenTime = null; // avoid repeat notifications
+                }
+            }, 1000);
+
+            // Desktop + sound notification
+            function notifyReturnToWork() {
+                // Notification
+                if (Notification.permission === "granted") {
+                    new Notification("Come back!", {
+                        body: "You left your focus session. Return to work!",
+                    });
+                } else {
+                    Notification.requestPermission();
+                }
+
+                // Optional sound
+                const audio = new Audio("/sounds/alert.mp3"); // change path
+                audio.play().catch(() => {});
+            }
+
         </script>
 
     </body>

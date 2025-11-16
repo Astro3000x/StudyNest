@@ -8,7 +8,7 @@
         body {
             margin: 0;
             font-family: Arial, sans-serif;
-            background: #f5f5f5;
+            background: #cbced1;
         }
         .toolbar {
             display: flex;
@@ -55,23 +55,94 @@
         button:hover {
             background: #1b2836;
         }
+        /* Flashcard UI */
+        #flashcard-section {
+            background: rgba(0,0,0,0.1);
+            padding: 20px;
+            border-radius: 12px;
+        }
 
+        #flashcard-card {
+            width: 350px;
+            height: 200px;
+            margin: 20px auto;
+            background: linear-gradient(135deg, #4a00e0, #8e2de2);
+            color: white;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            padding: 20px;
+            font-size: 22px;
+            backdrop-filter: blur(6px);
+            transition: transform 0.3s;
+            text-align: center;
+        }
+
+        #flashcard-card:hover {
+            transform: scale(1.03);
+        }
+
+        .flash-btn {
+            padding: 10px 20px;
+            margin: 5px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            background: #2c3e50;
+            color: white;
+            font-size: 16px;
+        }
+
+        .flash-btn:hover {
+            background: #1b2836;
+        }
+
+        #flashcard-creator {
+            margin-top: 20px;
+            padding: 15px;
+            background: rgba(255,255,255,0.2);
+            border-radius: 10px;
+        }
+
+        #flashcard-creator input {
+            width: 250px;
+            padding: 8px;
+            margin: 5px;
+            border-radius: 6px;
+            border: none;
+        }
+
+        #flashcard-list {
+            margin-top: 20px;
+            font-size: 14px;
+            color: #333;
+        }
+        #motivation-quote {
+            margin: 20px 0;
+            padding: 15px 20px;
+            background: linear-gradient(135deg, #8e2de2, #4a00e0);
+            color: white;
+            font-size: 18px;
+            border-radius: 10px;
+            text-align: center;
+            font-style: italic;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
     </style>
 </head>
 <body>
     <div class="toolbar">
-        <div class="title">My Dashboard</div>
-        <div class="links">
-            <a href="#">Home</a>
-            <a href="#">Profile</a>
-            <a href="#">Settings</a>
-        </div>
+        <div class="title">StudyNest</div>
     </div>
 
     <div class="content">
         <h2>Welcome to your dashboard!</h2>
         <p>This is where you can create study plans and use StudyNest tools.</p>
         <br>
+        <h3>Random Motivational Quote:</h3>
+        <div id="motivation-quote"></div>
         <h3>Study Plans:</h3>
         <div id="studyplans">
             <button id="show-form-btn">Create a New Study Plan</button>
@@ -91,10 +162,33 @@
         </div>
 
 
-        <h3>Chat with an AI assistant:</h3>
-        <div id="chatbot">
-            <p></p>
+        <h3 style="display: none;">AI Assistant</h3>
+        <div id="chatbot" style="border:1px solid #ccc; padding:10px; border-radius:10px; max-width:500px; display: none;">
+            <div id="chat-messages" style="height:200px; overflow-y:auto; margin-bottom:10px;"></div>
+            <input type="text" id="chat-input" placeholder="Type a message..." style="width:80%; padding:5px;">
+            <button id="chat-send">Send</button>
         </div>
+        <h3>Flashcards:</h3>
+        <button id="flashcard-toggle">Open Flashcards</button>
+
+        <div id="flashcard-section" style="display: none; margin-top: 20px;">
+
+            <div id="flashcard-card">Click "Next Card" to begin</div>
+
+            <button class="flash-btn" id="flash-flip-btn">Flip</button>
+            <button class="flash-btn" id="flash-next-btn">Next Card</button>
+
+            <div id="flashcard-creator">
+                <h4>Create a Flashcard</h4>
+                <input type="text" id="flash-q" placeholder="Question"><br>
+                <input type="text" id="flash-a" placeholder="Answer"><br>
+                <button class="flash-btn" id="flash-add-btn">Add Flashcard</button>
+            </div>
+
+            <div id="flashcard-list"></div>
+        </div>
+
+
     </div>
     <script src="{{ url_for('static', filename='script.js') }}"></script>
 </body>

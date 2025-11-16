@@ -1,7 +1,19 @@
 from flask import Flask, render_template, jsonify, request
+import os
+from openai import OpenAI
+'''
+# Create a new client instance
+client = OpenAI(api_key=os.environ.get("OPENAI_API_KEY"))
 
-
-
+# Example function for chat
+def ask_openai(messages):
+    response = client.chat.completions.create(
+        model="gpt-3.5-turbo",
+        messages=messages
+    )
+    # Depending on version, response.choices might differ; here’s one way:
+    return response.choices[0].message.content
+'''
 app = Flask(__name__)
 
 
@@ -37,6 +49,16 @@ def run_python():
     result = "Python code executed from Flask!"
     return jsonify({"message": result})
  
+
+'''@app.route("/chat", methods=["POST"])
+def chat():
+    user_input = request.json.get("message", "")
+    messages = [
+        {"role": "system", "content": "You are a helpful study assistant."},
+        {"role": "user", "content": user_input},
+    ]
+    reply = ask_openai(messages)
+    return jsonify({"reply": reply})'''
 
 if __name__ == '__main__':
     app.run(debug=True)
